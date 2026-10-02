@@ -39,7 +39,8 @@ This project has a November 2nd deadline, which limits some of the features that
 
 * File/image transfer
 * Emojis
-* Voice calls or screen sharing 
+* Voice calls or screen sharing
+* In-chat polling 
 * App support 
 * Public group chats
 * End-to-End encryption beyond TLS
@@ -51,7 +52,7 @@ This project has a November 2nd deadline, which limits some of the features that
 |-------------|------------------|----------|
 | Statement of Work and Requirements | These documents show the project scope, timetable of delivery, and acceptance criteria. | The documents are reviewed by the client. |
 | Diagrams/Analysis | This document shows the architecture, data flows, and deployment from a top level perspective. | It is reviewed and approved by the client. |
-| Test Release 1 | This version of the software will demonstrate basic chat functionality and testing deployment. | Messages are able to be sent between accounts. |
+| Test Release 1 | This version of the software will demonstrate basic chat functionality and testing deployment. | Messages are able to be sent between clients (of the server). |
 | Testing package | A testing suite that has good code coverage and can help create a list of bugs to fix and remaining features to implement. | Core tests pass and failed tests are documented. |
 | Deployment and handoff | The completed software system is handed off to the client. | Client receives and is able to run the system. |
 
@@ -61,25 +62,31 @@ This project has a November 2nd deadline, which limits some of the features that
 #### Assumptions
 
 * The project will have one central server that multiple users can connect to. 
+* One database will support all the data. 
+* A username (no uuid) is enough to uniquely identify a user.  
 * The client will review progress and answer questions that come up. 
 * The software is limited to a handful of users and not suitable for commercial deployment. 
 * It will just be a web-based version, no mobile app support. 
 
 #### Constraints
 
+* The project must stay within the scope defined above. 
 * The final delivery date is set to November 2nd, 2026, and cannot be pushed back. This constraints the development cycle. 
 * The project is limited to free-tier products, meaning no Azure database or VM for deployment. 
-
+* Some security considerations can't be skipped to speed up development. 
 
 #### Dependencies
 
 * Hosting the code, the environment, and final deployment. 
 * Libraries/frameworks used by the code. 
-* 
+* The client's decisions. 
+* The external database the server connects to. 
 
 ### Part 6 - Milestones and schedule
 
+The target delivery time is set to October 30th, to provide some leeway, and set October 31st - November 2nd as a contingency if needed. 
 
+![Gantt Chart](img/gantt-chart.png)
 
 ### Part 7 - Acceptance
 

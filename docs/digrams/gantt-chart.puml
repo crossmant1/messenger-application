@@ -1,22 +1,106 @@
+```plantuml
 @startgantt
+
 title Messenger Application - Project Timeline
 
-dateFormat YYYY-MM-DD
-projectStart 2026-10-01
-projectEnd 2026-11-02
+Project starts 2026-10-01
 
-section Analysis & Planning
-Statement of Work, Requirements, and Diagrams Analysis :s1, 2026-10-01, 10d
+' ============================================================
+' PROJECT PHASES
+' ============================================================
 
-section Development
-Test Release 1 - Basic Chat :r1, after s1, 5d
-  Person-to-Person Chat :r1a, after s1, 5d
-  User Login Implementation :r1b, after s1, 5d
-Group Chat Implementation :r2, after r1, 5d
-Message History & User Search :r3, after r2, 5d
+-- Planning & Definition --
 
-section Testing & QA
-Unit Testing & System Testing :test, after r3, 5d
+[Statement of Work] as [sow] starts 2026-10-01 and lasts 4 days
+[Statement of Work] is colored in #4F81BD
 
-section Deployment
-Final Completion & Handoff :final, after test, 1d
+[Architecture & Data Design] as [architecture] starts 2026-10-05 and lasts 3 days
+[Architecture & Data Design] is colored in #4F81BD
+
+
+-- Core Development --
+
+[Core Account Functionality] as [account] starts 2026-10-08 and lasts 4 days
+[Core Account Functionality] is colored in #70AD47
+
+[Private Messaging] as [private] starts 2026-10-12 and lasts 5 days
+[Private Messaging] is colored in #70AD47
+
+[Group Messaging] as [group] starts 2026-10-17 and lasts 5 days
+[Group Messaging] is colored in #70AD47
+
+
+-- Integration --
+
+[Feature-Complete Integrated Build] as [integrated] starts 2026-10-22 and lasts 2 days
+[Feature-Complete Integrated Build] is colored in #ED7D31
+
+
+-- Testing & Verification --
+
+[System Integration & Verification] as [verification] starts 2026-10-24 and lasts 4 days
+[System Integration & Verification] is colored in #ED7D31
+
+[Critical Defect Resolution] as [defects] starts 2026-10-28 and lasts 3 days
+[Critical Defect Resolution] is colored in #C55A11
+
+
+-- Delivery --
+
+[Release Candidate Review] as [review] starts 2026-10-31 and lasts 2 days
+[Release Candidate Review] is colored in #8064A2
+
+[Final Review & Delivery] as [final] happens 2026-11-02
+[Final Review & Delivery] is colored in #7030A0
+
+
+' ============================================================
+' MILESTONES / COMPLETION POINTS
+' ============================================================
+
+-- Key Milestones --
+
+[SOW Complete] happens 2026-10-04
+[SOW Complete] is colored in #4F81BD
+
+[Architecture Complete] happens 2026-10-07
+[Architecture Complete] is colored in #4F81BD
+
+[Account Functionality Complete] happens 2026-10-11
+[Account Functionality Complete] is colored in #70AD47
+
+[Private Messaging Complete] happens 2026-10-16
+[Private Messaging Complete] is colored in #70AD47
+
+[Group Messaging Complete] happens 2026-10-21
+[Group Messaging Complete] is colored in #70AD47
+
+[Integrated Build Complete] happens 2026-10-23
+[Integrated Build Complete] is colored in #ED7D31
+
+[Verification Complete] happens 2026-10-27
+[Verification Complete] is colored in #ED7D31
+
+[Target Finish] happens 2026-10-30
+[Target Finish] is colored in #C55A11
+
+[Final Delivery] happens 2026-11-02
+[Final Delivery] is colored in #7030A0
+
+
+' ============================================================
+' DEPENDENCIES
+' ============================================================
+
+[architecture] starts at [sow]'s end
+[account] starts at [architecture]'s end
+[private] starts at [account]'s end
+[group] starts at [private]'s end
+[integrated] starts at [group]'s end
+[verification] starts at [integrated]'s end
+[defects] starts at [verification]'s end
+[review] starts at [defects]'s end
+[final] starts at [review]'s end
+
+@endgantt
+```
