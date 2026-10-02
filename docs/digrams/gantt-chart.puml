@@ -1,0 +1,22 @@
+@startgantt
+title Messenger Application - Project Timeline
+
+dateFormat YYYY-MM-DD
+projectStart 2026-10-01
+projectEnd 2026-11-02
+
+section Analysis & Planning
+Statement of Work, Requirements, and Diagrams Analysis :s1, 2026-10-01, 10d
+
+section Development
+Test Release 1 - Basic Chat :r1, after s1, 5d
+  Person-to-Person Chat :r1a, after s1, 5d
+  User Login Implementation :r1b, after s1, 5d
+Group Chat Implementation :r2, after r1, 5d
+Message History & User Search :r3, after r2, 5d
+
+section Testing & QA
+Unit Testing & System Testing :test, after r3, 5d
+
+section Deployment
+Final Completion & Handoff :final, after test, 1d
