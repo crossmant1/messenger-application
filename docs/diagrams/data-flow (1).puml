@@ -1,0 +1,46 @@
+@startuml Messenger Data Flow Diagram
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam rectangle {
+  RoundCorner 12
+}
+
+
+rectangle "Unauthenticated\nVisitor" as Visitor
+rectangle "Registered\nUser" as User
+
+rectangle "P1\nAccount &\nAuthentication" as P1
+rectangle "P2\n Creating Conversations &\n Group Members" as P2
+rectangle "P3\nPrivate Message\nProcessing" as P3
+rectangle "P4\nGroup Message\nProcessing" as P4
+
+storage "D1\nUser Accounts &\nCredentials" as D1
+storage "D2\nConversations &\nMemberships" as D2
+storage "D3\nMessages" as D3
+
+
+Visitor --> P1 : registration data\nlogin credentials
+P1 --> Visitor : registration result\nlogin result / error
+User --> P1 : credentials\nlogout request
+P1 --> User : authenticated session\naction result
+P1 <--> D1 : account records\ncredential verification
+
+User --> P2 : conversation request\ngroup creation / membership request
+P2 <--> D1 : user lookup
+P2 <--> D2 : conversation / membership data
+P2 --> User : conversation list\nparticipants\naction result / error
+
+User --> P3 : private message submission
+P3 <--> D2 : participant authorization
+P3 --> D3 : private message record
+P3 --> User : message result / error
+
+User --> P4 : group message submission
+P4 <--> D2 : membership authorization
+P4 --> D3 : group message record
+P4 --> User : message result / error
+
+
+
+@enduml
