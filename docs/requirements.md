@@ -35,6 +35,7 @@ It doesn't include voice calls, screensharing, file transfer, friending, or mobi
 | FR-15 | List of conversations | A logged in user can see a list of chats they are a part of. |
 | FR-16 | Chat members | A member of a group chat can see other users in the chat. |
 | FR-17 | Authentication handling | Unauthroized users cannot access any system resources besides accessing the account creation form. 
+| FR-18 | Leaving private chats | A user can leave a private chat and no longer receive messages from that user. |
 
 ### Part 3 - Non-functional requirements
 

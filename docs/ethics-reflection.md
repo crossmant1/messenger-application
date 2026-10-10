@@ -38,6 +38,33 @@ It can help public welfare by connecting communities, families, and groups. Peop
 
 Again, as social beings we need communication to be happy. This system can help us exercise that need by supporting message exchanges. This can help people maintain relationships and groups manage informing large numbers of people important information. The negative potential impact is similar to the welfare impact, as people can misue the system to spread misinformation or try to hurt people. 
 
-### Part 2 - Connect Ethics to Engineering
+### Part 2 - Connect ethics to engineering
 
-#### 1. 
+#### 1. Unauthorized access to messages
+
+**Stakeholder:** End users using the system. 
+
+**Potential harm:** Private information could be leaked and spread aound to people who should not have access to it. This can hurt people's mental health and cause serious distress. 
+
+**Mitigation:** Use authorizaiton checkpoints for every server side request from a client, and impose all the usual protections of a database to prevent attacks like SQL injection or similar issues. The idea is to make the user's password the weakest link to accessing their messages. 
+
+**Engineering impact:** This directly relates to FR-03 and 17, NFR-01 and 02. 
+
+This is an ethical concern because the system must be secure for users to comfortably be able to share messages with each other that might relate to confidential topics. 
+
+#### 2. Online bullying
+
+**Stakeholder:** End users. 
+
+**Potential harm:** Bad actors can use the system to spread hate speech with the intent of hurting a group of people. 
+
+**Mitigation:** The software will not have a global reporting system, so the impacted users will have to take matters into their own hands. In group chats, they will have to ask the owner to remove the person or they should remove themselves. In private chatting, they would have to block the user to stop receiving messages. 
+
+**Engineering impact:** This relates to FR-11 and 12, and has lead to the creating of FR-18, allowing users to remove themselves from private chats. 
+
+This ethical concern is important becuase of the prevalance of cyber-bullying and those wanting to hurt other people. 
+
+### Part 3 - AI-Assisted Work
+
+In this assignment, AI tools were used to generate the different diagrams used through the docuemnts. For example, to create the gantt chart, I gave the tool a prompt specifying the start and end dates of the project, and I specified the different day breakdowns for adding the features/functional requirements. I did this because with specific instructions, they are good at making clean diagrams with effectively convey the message to a reviewer. 
+
