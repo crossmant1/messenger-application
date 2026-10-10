@@ -1,4 +1,4 @@
-@startuml Messenger Private Messaging Sequence
+@startuml Sequence diagram
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam sequenceMessageAlign center
@@ -8,9 +8,9 @@ skinparam BoxPadding 10
 
 actor "User A" as A
 actor "User B" as B
-participant "Messenger" as M
+participant "Frontend" as M
 participant "Conversation &\nAuthorization" as Auth
-participant "Message Store" as Msg
+participant "Database" as Msg
 
 == Open Private Conversation ==
 

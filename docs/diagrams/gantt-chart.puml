@@ -1,5 +1,5 @@
 ```plantuml
-@startgantt
+@startgantt Gantt chart
 
 title Messenger Application - Project Timeline
 
