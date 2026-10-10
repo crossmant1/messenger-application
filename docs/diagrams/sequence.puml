@@ -11,7 +11,6 @@ actor "User B" as B
 participant "Messenger" as M
 participant "Conversation &\nAuthorization" as Auth
 participant "Message Store" as Msg
-participant "Read-State Store" as Read
 
 == Open Private Conversation ==
 
@@ -26,9 +25,7 @@ else A is authorized
     Auth --> M : Authorization granted
     M -> Msg : Retrieve stored message history
     Msg --> M : Message history
-    M -> Read : Retrieve A's unread/read state
-    Read --> M : Read state
-    M --> A : Conversation history + participants + read state
+    M --> A : Conversation history + participants
 end
 
 == Send Private Message ==
@@ -42,15 +39,7 @@ alt A is not authorized or message is invalid
 else Message is valid and authorized
     M -> Msg : Persist message(author, conversation, timestamp)
     Msg --> M : Persistence confirmed
-    M -> Read : Update B's unread state
-    Read --> M : Read-state update confirmed
     M --> A : Message accepted
-    M --> B : New message available
 end
-
-note over A,B
-Requirements represented: FR-06, FR-07, FR-08, FR-09,
-FR-18, FR-19, FR-20, FR-21, FR-24, FR-26, FR-27.
-end note
 
 @enduml
