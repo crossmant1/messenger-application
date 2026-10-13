@@ -10,6 +10,9 @@ app.get('/api/health', (_req, res) => {
 });
 
 // Add the GET, POST, and error handlers here.
+app.get('/api/examples/notes', (_req, res) => {
+  res.status(200).json({ notes });
+});
 
 app.listen(3000, '127.0.0.1', () => {
   console.log('Listening on http://127.0.0.1:3000');

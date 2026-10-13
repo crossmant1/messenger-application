@@ -2,9 +2,13 @@
   "name": "messenger-application",
   "version": "1.0.0",
   "description": "Messenger Applcation",
-  "main": "index.js",
+  "type": "module",
+  "main": "server/server.js",
   "directories": {
-    "doc": "docs"
+    "doc": "docs",
+    "server": "server",
+    "client": "client"
+
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -16,7 +20,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/crossmant1/messenger-application/issues"
   },
