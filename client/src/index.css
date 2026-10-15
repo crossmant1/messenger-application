@@ -1,0 +1,6 @@
+body { font-family: system-ui, sans-serif; margin: 2rem; }
+main { max-width: 44rem; margin: 0 auto; }
+label { display: block; margin: 1rem 0 .3rem; }
+input { padding: .6rem; margin-right: .5rem; }
+button { padding: .6rem .9rem; }
+[role="alert"] { color: #a00020; }
