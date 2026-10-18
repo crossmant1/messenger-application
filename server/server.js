@@ -9,13 +9,6 @@ app.get('/api/health', (_req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
-function noteView(doc) {
-  return {
-    id: doc._id.toString(),
-    text: doc.text,
-    createdAt: doc.createdAt
-  };
-}
 
 // Add the GET, POST, and error handlers here.
 
