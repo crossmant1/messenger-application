@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 
-const secret = process.env.JWT_SECRET;
+//const secret = process.env.JWT_SECRET;
+const secret = "340efb35eb54f6b305a3a8a58d718c14470e7c5e983f686e34a304b4a62f50ee";
 if (typeof secret !== 'string'
     || /^[0-9a-f]{64}$/i.test(secret) === false) {
   throw new Error('JWT_SECRET must be 64 random hex characters');

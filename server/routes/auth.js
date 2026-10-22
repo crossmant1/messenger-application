@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import bcrypt from 'bcrypt';
-import { User } from '../models/User.js';
+import User from '../models/User.js';
 import { normalizedUsername, validNewPassword } from '../auth/input.js';
 import { signAccessToken } from '../auth/token.js';
 

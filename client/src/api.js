@@ -6,67 +6,64 @@ async function requestJson(path, options = {}) {
     if (err.name === 'AbortError') throw err;
     throw new Error('Cannot reach the API');
   }
-  let data;
-  try {
-    data = await response.json();
-  } catch {
-    throw new Error(`API returned invalid JSON (HTTP ${response.status})`);
-  }
-  if (response.ok === false) {
-    throw new Error(data.error ?? `HTTP ${response.status}`);
-  }
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error ?? `HTTP ${response.status}`);
   return data;
 }
 
+// Temporary user-id handoff until login establishes a real session.
+function userHeaders(userId) {
+  return { 'X-User-Id': userId };
+}
 
 export async function login(username, password) {
-  const response = await fetch('/api/auth/login', {
+  const data = await requestJson('/api/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password })
+    body: JSON.stringify({ username, password }),
   });
-
-  const data = await response.json();
-  if (response.ok === false) {
-    throw new Error(data.error ?? 'Login failed');
-  }
-
-  return data.token;
+  return data.user;
 }
 
-export function createAccount(username, password){
-        return requestJson('/api/create-account', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json' },
-        body: JSON.stringify({username, password})
-    });
-
-
-}
-
-export async function createChat(username, message) {
-  const response = await fetch('/api/chats', {
+export function createAccount(username, password) {
+  return requestJson('/api/create-account', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, message }),
+    body: JSON.stringify({ username, password }),
   });
-
-  if (!response.ok) {
-    throw new Error(`Could not create chat (${response.status}).`);
-  }
-
-  return response.status === 204 ? null : response.json();
 }
 
-//exmaple: 
-// export async function loadPrivateNotes(token) {
-//   const response = await fetch('/api/private/notes', {
-//     headers: { Authorization: `Bearer ${token}` }
-//   });
+export function getChats(userId, signal) {
+  return requestJson('/api/chats', { headers: userHeaders(userId), signal })
+    .then((data) => data.chats);
+}
 
-//   if (response.ok === false) {
-//     throw new Error(`Private GET failed: ${response.status}`);
-//   }
+export function createChat(userId, username) {
+  return requestJson('/api/chats', {
+    method: 'POST',
+    headers: { ...userHeaders(userId), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username }),
+  });
+}
 
-//   return (await response.json()).notes;
-// }
+export function getMessages(userId, chatId, signal) {
+  return requestJson(`/api/chats/${encodeURIComponent(chatId)}/messages`, {
+    headers: userHeaders(userId), signal,
+  }).then((data) => data.messages);
+}
+
+export function sendMessage(userId, chatId, message) {
+  return requestJson(`/api/chats/${encodeURIComponent(chatId)}/messages`, {
+    method: 'POST',
+    headers: { ...userHeaders(userId), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message }),
+  });
+}
+
+export function addMember(userId, chatId, username) {
+  return requestJson(`/api/chats/${encodeURIComponent(chatId)}/members`, {
+    method: 'POST',
+    headers: { ...userHeaders(userId), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username }),
+  });
+}
