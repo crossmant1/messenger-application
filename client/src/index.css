@@ -9,6 +9,12 @@ input, textarea { max-width: 100%; box-sizing: border-box; }
 textarea { display: block; width: 100%; min-height: 4.5rem; }
 button { cursor: pointer; }
 button:disabled { cursor: not-allowed; opacity: .6; }
+.login-form { max-width: 24rem; margin: 2rem auto; text-align: left; }
+.login-form h2 { text-align: center; }
+.login-form input { display: block; width: 100%; margin: .25rem 0 1rem; }
+.login-form > button[type="submit"] { width: 100%; margin-top: .5rem; }
+.account-switch { text-align: center; }
+.link-button { border: 0; padding: 0; margin: 0; background: none; color: #205fbd; text-decoration: underline; }
 nav ul { display: flex; list-style: none; padding: 0; gap: .5rem; flex-wrap: wrap; }
 button[aria-current="page"] { outline: 2px solid #205fbd; }
 .entries { list-style: none; padding: 0; }

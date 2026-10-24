@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { login, listBoards } from './studyAPI.js';
+import { login, register, listBoards } from './studyAPI.js';
 import LoginForm from './LoginForm.jsx';
 import BoardList from './BoardList.jsx';
 import StudyBoardPanel from './StudyBoardPanel.jsx';
@@ -33,6 +33,25 @@ async function handleLogin(username, password) {
   }
 }
 
+async function handleRegister(username, password) {
+  setLoginBusy(true);
+  setLoginError('');
+  try {
+    await register(username, password);
+    const result = await login(username, password);
+    setSession({ token: result.token, user: result.user });
+  } catch (err) {
+    const message = err.message === 'invalid registration input'
+      ? 'Choose a username with 3–32 characters (letters, numbers, and underscores; it must start with a letter).'
+      : err.message === 'username unavailable'
+        ? 'That username is already taken. Try another one.'
+        : err.message;
+    setLoginError(message);
+  } finally {
+    setLoginBusy(false);
+  }
+}
+
 useEffect(() => {
   if (session === null) return;
   const controller = new AbortController();
@@ -57,7 +76,8 @@ useEffect(() => {
 
   if (session === null) {
     return <main><h1>Study Board</h1>
-      <LoginForm onLogin={handleLogin} busy={loginBusy} error={loginError} />
+      <LoginForm onLogin={handleLogin} onRegister={handleRegister}
+        busy={loginBusy} error={loginError} />
     </main>;
   }
 

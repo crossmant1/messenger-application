@@ -39,6 +39,12 @@ export function login(username, password) {
   });
 }
 
+export function register(username, password) {
+  return requestJson('/api/auth/register', {
+    method: 'POST', body: { username, password }
+  });
+}
+
 export function listBoards(token, signal) {
   return requestJson('/api/study/boards', { token, signal });
 }

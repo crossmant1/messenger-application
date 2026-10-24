@@ -11,7 +11,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "local": "node --watch --watch-preserve-output --env-file=.env.local server.js"
+    "local": "node --watch --watch-preserve-output --env-file=.env server/server.js"
   },
   "repository": {
     "type": "git",
