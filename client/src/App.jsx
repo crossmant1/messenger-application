@@ -1,16 +1,81 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Login from './pages/Login';
-import CreateAccount from './pages/CreateAccount';
-import Dashboard from './pages/Dashboard';
+import { useCallback, useEffect, useState } from 'react';
+import { login, listBoards } from './studyAPI.js';
+import LoginForm from './LoginForm.jsx';
+import BoardList from './BoardList.jsx';
+import StudyBoardPanel from './StudyBoardPanel.jsx';
 
 export default function App() {
+  const [session, setSession] = useState(null);
+  const [loginBusy, setLoginBusy] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const [boards, setBoards] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
+  const [boardsBusy, setBoardsBusy] = useState(false);
+  const [boardsError, setBoardsError] = useState('');
+
+  const endSession = useCallback((message = '') => {
+  setSession(null);
+  setBoards([]);
+  setSelectedId(null);
+  setLoginError(message);
+}, []);
+
+async function handleLogin(username, password) {
+  setLoginBusy(true);
+  setLoginError('');
+  try {
+    const result = await login(username, password);
+    setSession({ token: result.token, user: result.user });
+  } catch (err) {
+    setLoginError(err.message);
+  } finally {
+    setLoginBusy(false);
+  }
+}
+
+useEffect(() => {
+  if (session === null) return;
+  const controller = new AbortController();
+  setBoardsBusy(true);
+  setBoardsError('');
+  listBoards(session.token, controller.signal).then((result) => {
+    if (controller.signal.aborted) return;
+    setBoards(result.boards);
+    setSelectedId(result.boards[0]?.id ?? null);
+  }).catch((err) => {
+    if (controller.signal.aborted) return;
+    if (err.status === 401) {
+      endSession('Session expired. Log in again.');
+    } else {
+      setBoardsError(`Cannot load boards: ${err.message}`);
+    }
+  }).finally(() => {
+    if (!controller.signal.aborted) setBoardsBusy(false);
+  });
+  return () => controller.abort();
+}, [session, endSession]);
+
+  if (session === null) {
+    return <main><h1>Study Board</h1>
+      <LoginForm onLogin={handleLogin} busy={loginBusy} error={loginError} />
+    </main>;
+  }
+
+  const selectedBoard = boards.find((board) => board.id === selectedId);
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Dashboard />}/>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<CreateAccount />} />
-      </Routes>
-    </BrowserRouter>
+    <main>
+      <header className="app-header">
+        <h1>Study Board</h1>
+        <p>Signed in as {session.user.username}</p>
+        <button type="button" onClick={() => endSession()}>Log out</button>
+      </header>
+      {boardsBusy && <p role="status">Loading boards...</p>}
+      {boardsError && <p role="alert">{boardsError}</p>}
+      <BoardList boards={boards} selectedId={selectedId} onSelect={setSelectedId} />
+      {selectedBoard && (
+        <StudyBoardPanel key={selectedBoard.id} board={selectedBoard}
+          token={session.token} userId={session.user.id} onUnauthorized={endSession} />
+      )}
+    </main>
   );
 }

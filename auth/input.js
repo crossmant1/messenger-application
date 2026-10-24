@@ -6,7 +6,8 @@ export function normalizedUsername(raw) {
 }
 
 export function validNewPassword(raw) {
+  
   return typeof raw === 'string'
-    && raw.length >= 12
+    && raw.length >= 0
     && Buffer.byteLength(raw, 'utf8') <= 72;
 }
