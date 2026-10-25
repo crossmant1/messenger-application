@@ -1,13 +1,20 @@
 import express from 'express';
 import mongoose from 'mongoose';
+import { createServer } from 'node:http';
+import { Server } from 'socket.io';
 import { PrimerUser } from '../models/PrimerUser.js'; 
 import { authRouter } from '../routes/auth.js';
 import { chatsRouter } from '../routes/chats.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { attachChatSockets } from '../realtime/chatSockets.js';
 
 
 
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer);
+attachChatSockets(io);
+app.set('chatIo', io);
 
 app.use(express.json({ limit: '16kb' }));
 
@@ -47,7 +54,7 @@ try {
     serverSelectionTimeoutMS: 5000
   });
   await PrimerUser.init();
-  app.listen(3000, '127.0.0.1', () => {
+  httpServer.listen(3000, '127.0.0.1', () => {
     console.log('Listening on http://127.0.0.1:3000');
   });
 } catch (err) {

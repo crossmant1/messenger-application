@@ -3,6 +3,7 @@ import Chat from '../models/Chat.js';
 import Message from '../models/Message.js';
 import { PrimerUser } from '../models/PrimerUser.js';
 import { normalizedUsername } from '../auth/input.js';
+import { chatRoom } from '../realtime/chatSockets.js';
 
 export const chatsRouter = Router();
 const idPattern = /^[0-9a-f]{24}$/i;
@@ -107,7 +108,9 @@ chatsRouter.post('/:chatId/messages', async (req, res, next) => {
       message: raw.trim()
     });
     await Chat.updateOne({ _id: chat._id }, { $set: { updatedAt: doc.createdAt } });
-    return res.status(201).json({ message: viewMessage(doc) });
+    const message = viewMessage(doc);
+    req.app.get('chatIo').to(chatRoom(message.chatId)).emit('chat:message', message);
+    return res.status(201).json({ message });
   } catch (err) {
     next(err);
   }

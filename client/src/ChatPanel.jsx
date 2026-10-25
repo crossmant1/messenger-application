@@ -1,5 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { io } from 'socket.io-client';
 import { listMessages, postMessage } from './chatAPI.js';
+
+function mergeMessages(current, incoming) {
+  const messages = new Map(current.map(message => [message.id, message]));
+  for (const message of incoming) messages.set(message.id, message);
+  return [...messages.values()].sort((left, right) =>
+    new Date(left.createdAt) - new Date(right.createdAt)
+      || left.id.localeCompare(right.id));
+}
 
 export default function ChatPanel({ chat, token, userId, onUnauthorized }) {
   const [messages, setMessages] = useState([]);
@@ -7,13 +16,22 @@ export default function ChatPanel({ chat, token, userId, onUnauthorized }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [socketStatus, setSocketStatus] = useState('connecting');
+  const messagesListRef = useRef(null);
+
+  useEffect(() => {
+    const list = messagesListRef.current;
+    if (list) list.scrollTop = list.scrollHeight;
+  }, [messages]);
 
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
     setError('');
     listMessages(token, chat.id, controller.signal).then(({ messages: loaded }) => {
-      if (!controller.signal.aborted) setMessages(loaded);
+      if (!controller.signal.aborted) {
+        setMessages(current => mergeMessages(current, loaded));
+      }
     }).catch(err => {
       if (controller.signal.aborted) return;
       if (err.status === 401) onUnauthorized('Session expired. Log in again.');
@@ -24,6 +42,70 @@ export default function ChatPanel({ chat, token, userId, onUnauthorized }) {
     return () => controller.abort();
   }, [chat.id, token, onUnauthorized]);
 
+  useEffect(() => {
+    const socket = io({ auth: { token }, autoConnect: false });
+    let active = true;
+    let connectionRun = 0;
+
+    socket.on('chat:message', message => {
+      if (active && message?.chatId === chat.id) {
+        setMessages(current => mergeMessages(current, [message]));
+      }
+    });
+
+    socket.on('connect', async () => {
+      const run = ++connectionRun;
+      setSocketStatus('joining');
+      try {
+        const joined = await socket.timeout(5000)
+          .emitWithAck('chat:join', { chatId: chat.id });
+        if (!active || connectionRun !== run) return;
+        if (joined.ok !== true) {
+          setSocketStatus('denied');
+          setError('This chat is no longer available.');
+          socket.disconnect();
+          return;
+        }
+        setSocketStatus('live');
+        const { messages: latest } = await listMessages(token, chat.id);
+        if (active && connectionRun === run) {
+          setMessages(current => mergeMessages(current, latest));
+        }
+      } catch (err) {
+        if (!active || connectionRun !== run) return;
+        if (err.status === 401) onUnauthorized('Session expired. Log in again.');
+        else setError(`Live message recovery failed: ${err.message}`);
+      }
+    });
+
+    socket.on('connect_error', err => {
+      if (!active) return;
+      setSocketStatus('offline');
+      if (err.message === 'authentication required') {
+        onUnauthorized('Session expired. Log in again.');
+      } else {
+        setError(`Live updates unavailable: ${err.message}`);
+      }
+    });
+
+    socket.on('disconnect', reason => {
+      ++connectionRun;
+      if (!active) return;
+      if (reason !== 'io client disconnect') setSocketStatus('offline');
+      if (reason === 'io server disconnect') {
+        onUnauthorized('Session expired. Log in again.');
+      }
+    });
+
+    socket.connect();
+    return () => {
+      active = false;
+      ++connectionRun;
+      socket.removeAllListeners();
+      socket.disconnect();
+    };
+  }, [chat.id, token, onUnauthorized]);
+
   async function handleSubmit(event) {
     event.preventDefault();
     const message = text.trim();
@@ -32,7 +114,7 @@ export default function ChatPanel({ chat, token, userId, onUnauthorized }) {
     setError('');
     try {
       const { message: saved } = await postMessage(token, chat.id, message);
-      setMessages(current => [...current, saved]);
+      setMessages(current => mergeMessages(current, [saved]));
       setText('');
     } catch (err) {
       if (err.status === 401) onUnauthorized('Session expired. Log in again.');
@@ -45,9 +127,10 @@ export default function ChatPanel({ chat, token, userId, onUnauthorized }) {
   return (
     <section className="chat-panel" aria-label={`Chat with ${chat.username}`}>
       <h2>{chat.username}</h2>
+      <p role="status">Live updates: {socketStatus}</p>
       {loading ? <p role="status">Loading messages...</p> : (
         messages.length === 0 ? <p className="empty-chat">No messages yet. Say hello!</p> :
-          <ol className="messages" aria-live="polite">
+          <ol ref={messagesListRef} className="messages" aria-live="polite">
             {messages.map(message => (
               <li key={message.id} className={message.senderId === userId ? 'message mine' : 'message'}>
                 <p>{message.body}</p>
