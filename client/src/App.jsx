@@ -1,101 +1,133 @@
 import { useCallback, useEffect, useState } from 'react';
-import { login, register, listBoards } from './studyAPI.js';
+import { createChat, listChats, login, register } from './chatAPI.js';
 import LoginForm from './LoginForm.jsx';
-import BoardList from './BoardList.jsx';
-import StudyBoardPanel from './StudyBoardPanel.jsx';
+import ChatList from './ChatList.jsx';
+import ChatPanel from './ChatPanel.jsx';
 
 export default function App() {
   const [session, setSession] = useState(null);
   const [loginBusy, setLoginBusy] = useState(false);
   const [loginError, setLoginError] = useState('');
-  const [boards, setBoards] = useState([]);
+  const [chats, setChats] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
-  const [boardsBusy, setBoardsBusy] = useState(false);
-  const [boardsError, setBoardsError] = useState('');
+  const [chatsBusy, setChatsBusy] = useState(false);
+  const [chatsError, setChatsError] = useState('');
+  const [newUsername, setNewUsername] = useState('');
+  const [creatingChat, setCreatingChat] = useState(false);
+  const [createError, setCreateError] = useState('');
 
   const endSession = useCallback((message = '') => {
-  setSession(null);
-  setBoards([]);
-  setSelectedId(null);
-  setLoginError(message);
-}, []);
-
-async function handleLogin(username, password) {
-  setLoginBusy(true);
-  setLoginError('');
-  try {
-    const result = await login(username, password);
-    setSession({ token: result.token, user: result.user });
-  } catch (err) {
-    setLoginError(err.message);
-  } finally {
-    setLoginBusy(false);
-  }
-}
-
-async function handleRegister(username, password) {
-  setLoginBusy(true);
-  setLoginError('');
-  try {
-    await register(username, password);
-    const result = await login(username, password);
-    setSession({ token: result.token, user: result.user });
-  } catch (err) {
-    const message = err.message === 'invalid registration input'
-      ? 'Choose a username with 3–32 characters (letters, numbers, and underscores; it must start with a letter).'
-      : err.message === 'username unavailable'
-        ? 'That username is already taken. Try another one.'
-        : err.message;
+    setSession(null);
+    setChats([]);
+    setSelectedId(null);
     setLoginError(message);
-  } finally {
-    setLoginBusy(false);
-  }
-}
+  }, []);
 
-useEffect(() => {
-  if (session === null) return;
-  const controller = new AbortController();
-  setBoardsBusy(true);
-  setBoardsError('');
-  listBoards(session.token, controller.signal).then((result) => {
-    if (controller.signal.aborted) return;
-    setBoards(result.boards);
-    setSelectedId(result.boards[0]?.id ?? null);
-  }).catch((err) => {
-    if (controller.signal.aborted) return;
-    if (err.status === 401) {
-      endSession('Session expired. Log in again.');
-    } else {
-      setBoardsError(`Cannot load boards: ${err.message}`);
+  async function handleLogin(username, password) {
+    setLoginBusy(true);
+    setLoginError('');
+    try {
+      const result = await login(username, password);
+      setSession({ token: result.token, user: result.user });
+    } catch (err) {
+      setLoginError(err.message);
+    } finally {
+      setLoginBusy(false);
     }
-  }).finally(() => {
-    if (!controller.signal.aborted) setBoardsBusy(false);
-  });
-  return () => controller.abort();
-}, [session, endSession]);
+  }
 
-  if (session === null) {
-    return <main><h1>Study Board</h1>
+  async function handleRegister(username, password) {
+    setLoginBusy(true);
+    setLoginError('');
+    try {
+      await register(username, password);
+      const result = await login(username, password);
+      setSession({ token: result.token, user: result.user });
+    } catch (err) {
+      const message = err.message === 'invalid registration input'
+        ? 'Choose a username with 3–32 characters (letters, numbers, and underscores; it must start with a letter).'
+        : err.message === 'username unavailable'
+          ? 'That username is already taken. Try another one.'
+          : err.message;
+      setLoginError(message);
+    } finally {
+      setLoginBusy(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!session) return undefined;
+    const controller = new AbortController();
+    setChatsBusy(true);
+    setChatsError('');
+    listChats(session.token, controller.signal).then(({ chats: loadedChats }) => {
+      if (controller.signal.aborted) return;
+      setChats(loadedChats);
+      setSelectedId(current => current && loadedChats.some(chat => chat.id === current)
+        ? current : loadedChats[0]?.id ?? null);
+    }).catch(err => {
+      if (controller.signal.aborted) return;
+      if (err.status === 401) endSession('Session expired. Log in again.');
+      else setChatsError(`Cannot load chats: ${err.message}`);
+    }).finally(() => {
+      if (!controller.signal.aborted) setChatsBusy(false);
+    });
+    return () => controller.abort();
+  }, [session, endSession]);
+
+  async function handleCreateChat(event) {
+    event.preventDefault();
+    if (!session || creatingChat) return;
+    setCreatingChat(true);
+    setCreateError('');
+    try {
+      const { chat } = await createChat(session.token, newUsername);
+      setChats(current => [chat, ...current.filter(item => item.id !== chat.id)]);
+      setSelectedId(chat.id);
+      setNewUsername('');
+    } catch (err) {
+      if (err.status === 401) endSession('Session expired. Log in again.');
+      else setCreateError(err.message === 'user not found'
+        ? 'No account found with that username.' : err.message);
+    } finally {
+      setCreatingChat(false);
+    }
+  }
+
+  if (!session) {
+    return <main><h1>Messenger</h1>
       <LoginForm onLogin={handleLogin} onRegister={handleRegister}
         busy={loginBusy} error={loginError} />
     </main>;
   }
 
-  const selectedBoard = boards.find((board) => board.id === selectedId);
+  const selectedChat = chats.find(chat => chat.id === selectedId);
   return (
     <main>
       <header className="app-header">
-        <h1>Study Board</h1>
+        <h1>Messenger</h1>
         <p>Signed in as {session.user.username}</p>
         <button type="button" onClick={() => endSession()}>Log out</button>
       </header>
-      {boardsBusy && <p role="status">Loading boards...</p>}
-      {boardsError && <p role="alert">{boardsError}</p>}
-      <BoardList boards={boards} selectedId={selectedId} onSelect={setSelectedId} />
-      {selectedBoard && (
-        <StudyBoardPanel key={selectedBoard.id} board={selectedBoard}
+      <form className="new-chat-form" onSubmit={handleCreateChat}>
+        <label htmlFor="new-chat-username">Start a chat</label>
+        <input id="new-chat-username" autoComplete="off" required minLength={3}
+          maxLength={32} value={newUsername}
+          onChange={event => setNewUsername(event.target.value)}
+          placeholder="Enter an existing username" />
+        <button type="submit" disabled={creatingChat}>
+          {creatingChat ? 'Creating...' : 'Create chat'}
+        </button>
+      </form>
+      {createError && <p role="alert">{createError}</p>}
+      {chatsBusy && <p role="status">Loading chats...</p>}
+      {chatsError && <p role="alert">{chatsError}</p>}
+      <div className="messenger-layout">
+        <ChatList chats={chats} selectedId={selectedId} onSelect={setSelectedId} />
+        {selectedChat ? <ChatPanel key={selectedChat.id} chat={selectedChat}
           token={session.token} userId={session.user.id} onUnauthorized={endSession} />
-      )}
+          : <section className="empty-chat"><p>Select a chat or start a new one.</p></section>}
+      </div>
     </main>
   );
 }

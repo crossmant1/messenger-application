@@ -45,27 +45,24 @@ export function register(username, password) {
   });
 }
 
-export function listBoards(token, signal) {
-  return requestJson('/api/study/boards', { token, signal });
-}
-export function listEntries(token, boardId, before = null, signal) {
-  const base = `/api/study/boards/${encodeURIComponent(boardId)}/entries`;
-  const cursor = before === null ? '' : `?before=${encodeURIComponent(before)}`;
-  return requestJson(base + cursor, { token, signal });
+export function listChats(token, signal) {
+  return requestJson('/api/chats', { token, signal });
 }
 
-export function postEntry(token, boardId, body) {
-  return requestJson(`/api/study/boards/${encodeURIComponent(boardId)}/entries`, {
-    token, method: 'POST', body: { body }
+export function createChat(token, username) {
+  return requestJson('/api/chats', {
+    token, method: 'POST', body: { username }
   });
 }
-export async function recoverAllEntries(token, boardId, signal) {
-  const entries = [];
-  let before = null;
-  do {
-    const page = await listEntries(token, boardId, before, signal);
-    entries.push(...page.entries);
-    before = page.nextBefore;
-  } while (before !== null);
-  return entries;
+
+export function listMessages(token, chatId, signal) {
+  return requestJson(`/api/chats/${encodeURIComponent(chatId)}/messages`, {
+    token, signal
+  });
+}
+
+export function postMessage(token, chatId, message) {
+  return requestJson(`/api/chats/${encodeURIComponent(chatId)}/messages`, {
+    token, method: 'POST', body: { message }
+  });
 }

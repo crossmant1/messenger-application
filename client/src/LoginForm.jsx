@@ -13,7 +13,7 @@ export default function LoginForm({ onLogin, onRegister, busy, error }) {
   const action = creatingAccount ? 'Create account' : 'Log in';
    return (
     <form onSubmit={handleSubmit} className="login-form">
-      <h2>{creatingAccount ? 'Create your account' : 'Log in to Study Boards'}</h2>
+      <h2>{creatingAccount ? 'Create your account' : 'Log in to Messenger'}</h2>
       <label htmlFor="username">Username</label>
       <input id="username" autoComplete="username" required minLength={3} maxLength={32}
         pattern="[A-Za-z][A-Za-z0-9_]{2,31}"
@@ -27,7 +27,7 @@ export default function LoginForm({ onLogin, onRegister, busy, error }) {
       </button>
       {error && <p role="alert">{error}</p>}
       <p className="account-switch">
-        {creatingAccount ? 'Already have an account?' : 'New to Study Boards?'}{' '}
+        {creatingAccount ? 'Already have an account?' : 'New to Messenger?'}{' '}
         <button type="button" className="link-button" disabled={busy}
           onClick={() => setCreatingAccount((value) => !value)}>
           {creatingAccount ? 'Log in' : 'Create an account'}
