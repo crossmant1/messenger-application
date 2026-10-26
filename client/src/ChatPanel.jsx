@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
-import { listMessages, postMessage } from './chatAPI.js';
+import { addChatParticipant, listMessages, postMessage } from './chatAPI.js';
 
 function mergeMessages(current, incoming) {
   const messages = new Map(current.map(message => [message.id, message]));
@@ -10,13 +10,16 @@ function mergeMessages(current, incoming) {
       || left.id.localeCompare(right.id));
 }
 
-export default function ChatPanel({ chat, token, userId, onUnauthorized }) {
+export default function ChatPanel({ chat, token, userId, onUnauthorized, onChatUpdated }) {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [socketStatus, setSocketStatus] = useState('connecting');
+  const [memberUsername, setMemberUsername] = useState('');
+  const [addingMember, setAddingMember] = useState(false);
+  const [memberError, setMemberError] = useState('');
   const messagesListRef = useRef(null);
 
   useEffect(() => {
@@ -124,9 +127,37 @@ export default function ChatPanel({ chat, token, userId, onUnauthorized }) {
     }
   }
 
+  async function handleAddMember(event) {
+    event.preventDefault();
+    if (!memberUsername.trim() || addingMember) return;
+    setAddingMember(true);
+    setMemberError('');
+    try {
+      const { chat: updated } = await addChatParticipant(token, chat.id, memberUsername);
+      onChatUpdated(updated);
+      setMemberUsername('');
+    } catch (err) {
+      if (err.status === 401) onUnauthorized('Session expired. Log in again.');
+      else setMemberError(err.message === 'user not found'
+        ? 'No account found with that username.' : err.message);
+    } finally {
+      setAddingMember(false);
+    }
+  }
+
   return (
     <section className="chat-panel" aria-label={`Chat with ${chat.username}`}>
       <h2>{chat.username}</h2>
+      <p>Members: You, {(chat.participants ?? []).map(person => person.username).join(', ')}</p>
+      <form className="add-member-form" onSubmit={handleAddMember}>
+        <label htmlFor="add-member-username">Add someone to this chat</label>
+        <input id="add-member-username" autoComplete="off" required minLength={3}
+          maxLength={32} value={memberUsername}
+          onChange={event => setMemberUsername(event.target.value)}
+          placeholder="Enter an existing username" />
+        <button type="submit" disabled={addingMember}>{addingMember ? 'Adding...' : 'Add member'}</button>
+      </form>
+      {memberError && <p role="alert">{memberError}</p>}
       <p role="status">Live updates: {socketStatus}</p>
       {loading ? <p role="status">Loading messages...</p> : (
         messages.length === 0 ? <p className="empty-chat">No messages yet. Say hello!</p> :

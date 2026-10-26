@@ -55,6 +55,12 @@ export function createChat(token, username) {
   });
 }
 
+export function addChatParticipant(token, chatId, username) {
+  return requestJson(`/api/chats/${encodeURIComponent(chatId)}/participants`, {
+    token, method: 'POST', body: { username }
+  });
+}
+
 export function listMessages(token, chatId, signal) {
   return requestJson(`/api/chats/${encodeURIComponent(chatId)}/messages`, {
     token, signal

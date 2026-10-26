@@ -9,12 +9,13 @@ export const chatsRouter = Router();
 const idPattern = /^[0-9a-f]{24}$/i;
 
 function viewChat(chat, userId) {
-  const other = chat.participants.find(
-    participant => participant._id.toString() !== userId
-  );
+  const participants = chat.participants
+    .filter(participant => participant._id.toString() !== userId)
+    .map(participant => ({ id: participant._id.toString(), username: participant.username }));
   return {
     id: chat._id.toString(),
-    username: other?.username ?? 'Unknown user',
+    username: participants.map(participant => participant.username).join(', ') || 'Unknown user',
+    participants,
     createdAt: chat.createdAt
   };
 }
@@ -42,6 +43,29 @@ chatsRouter.get('/', async (req, res, next) => {
     return res.status(200).json({
       chats: chats.map(chat => viewChat(chat, req.auth.userId))
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+chatsRouter.post('/:chatId/participants', async (req, res, next) => {
+  const username = normalizedUsername(req.body?.username);
+  if (username === null) return res.status(400).json({ error: 'invalid username' });
+  try {
+    if (!idPattern.test(req.params.chatId)) return res.status(404).json({ error: 'chat not found' });
+    const chat = await Chat.findOne({ _id: req.params.chatId, participants: req.auth.userId });
+    if (!chat) return res.status(404).json({ error: 'chat not found' });
+    const added = await PrimerUser.findOne({ username }).select('_id').lean();
+    if (!added) return res.status(404).json({ error: 'user not found' });
+    if (added._id.toString() === req.auth.userId) {
+      return res.status(400).json({ error: 'already a chat member' });
+    }
+    if (!chat.participants.some(id => id.toString() === added._id.toString())) {
+      chat.participants.push(added._id);
+      await chat.save();
+    }
+    await chat.populate('participants', 'username');
+    return res.status(200).json({ chat: viewChat(chat, req.auth.userId) });
   } catch (err) {
     next(err);
   }

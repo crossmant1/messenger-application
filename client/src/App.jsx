@@ -125,7 +125,8 @@ export default function App() {
       <div className="messenger-layout">
         <ChatList chats={chats} selectedId={selectedId} onSelect={setSelectedId} />
         {selectedChat ? <ChatPanel key={selectedChat.id} chat={selectedChat}
-          token={session.token} userId={session.user.id} onUnauthorized={endSession} />
+          token={session.token} userId={session.user.id} onUnauthorized={endSession}
+          onChatUpdated={updated => setChats(current => current.map(item => item.id === updated.id ? updated : item))} />
           : <section className="empty-chat"><p>Select a chat or start a new one.</p></section>}
       </div>
     </main>
