@@ -8,6 +8,10 @@ export function chatRoom(chatId) {
   return `chat:${chatId}`;
 }
 
+export function userRoom(userId) {
+  return `user:${userId}`;
+}
+
 export function attachChatSockets(io) {
   io.use((socket, next) => {
     try {
@@ -25,6 +29,7 @@ export function attachChatSockets(io) {
   });
 
   io.on('connection', socket => {
+    socket.join(userRoom(socket.data.userId));
     const expiryTimer = setTimeout(() => socket.disconnect(true),
       Math.max(0, socket.data.expiresAt - Date.now()));
     socket.on('disconnect', () => clearTimeout(expiryTimer));

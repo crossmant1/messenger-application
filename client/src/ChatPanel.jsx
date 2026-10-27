@@ -16,7 +16,6 @@ export default function ChatPanel({ chat, token, userId, onUnauthorized, onChatU
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [socketStatus, setSocketStatus] = useState('connecting');
   const [memberUsername, setMemberUsername] = useState('');
   const [addingMember, setAddingMember] = useState(false);
   const [memberError, setMemberError] = useState('');
@@ -58,18 +57,15 @@ export default function ChatPanel({ chat, token, userId, onUnauthorized, onChatU
 
     socket.on('connect', async () => {
       const run = ++connectionRun;
-      setSocketStatus('joining');
       try {
         const joined = await socket.timeout(5000)
           .emitWithAck('chat:join', { chatId: chat.id });
         if (!active || connectionRun !== run) return;
         if (joined.ok !== true) {
-          setSocketStatus('denied');
           setError('This chat is no longer available.');
           socket.disconnect();
           return;
         }
-        setSocketStatus('live');
         const { messages: latest } = await listMessages(token, chat.id);
         if (active && connectionRun === run) {
           setMessages(current => mergeMessages(current, latest));
@@ -83,7 +79,6 @@ export default function ChatPanel({ chat, token, userId, onUnauthorized, onChatU
 
     socket.on('connect_error', err => {
       if (!active) return;
-      setSocketStatus('offline');
       if (err.message === 'authentication required') {
         onUnauthorized('Session expired. Log in again.');
       } else {
@@ -94,7 +89,6 @@ export default function ChatPanel({ chat, token, userId, onUnauthorized, onChatU
     socket.on('disconnect', reason => {
       ++connectionRun;
       if (!active) return;
-      if (reason !== 'io client disconnect') setSocketStatus('offline');
       if (reason === 'io server disconnect') {
         onUnauthorized('Session expired. Log in again.');
       }
@@ -158,7 +152,6 @@ export default function ChatPanel({ chat, token, userId, onUnauthorized, onChatU
         <button type="submit" disabled={addingMember}>{addingMember ? 'Adding...' : 'Add member'}</button>
       </form>
       {memberError && <p role="alert">{memberError}</p>}
-      <p role="status">Live updates: {socketStatus}</p>
       {loading ? <p role="status">Loading messages...</p> : (
         messages.length === 0 ? <p className="empty-chat">No messages yet. Say hello!</p> :
           <ol ref={messagesListRef} className="messages" aria-live="polite">

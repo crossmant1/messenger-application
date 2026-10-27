@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { io } from 'socket.io-client';
 import { createChat, listChats, login, register } from './chatAPI.js';
 import LoginForm from './LoginForm.jsx';
 import ChatList from './ChatList.jsx';
@@ -62,9 +63,11 @@ export default function App() {
     setChatsError('');
     listChats(session.token, controller.signal).then(({ chats: loadedChats }) => {
       if (controller.signal.aborted) return;
-      setChats(loadedChats);
-      setSelectedId(current => current && loadedChats.some(chat => chat.id === current)
-        ? current : loadedChats[0]?.id ?? null);
+      setChats(current => [
+        ...current.filter(chat => !loadedChats.some(loaded => loaded.id === chat.id)),
+        ...loadedChats
+      ]);
+      setSelectedId(current => current ?? loadedChats[0]?.id ?? null);
     }).catch(err => {
       if (controller.signal.aborted) return;
       if (err.status === 401) endSession('Session expired. Log in again.');
@@ -73,6 +76,22 @@ export default function App() {
       if (!controller.signal.aborted) setChatsBusy(false);
     });
     return () => controller.abort();
+  }, [session, endSession]);
+
+  useEffect(() => {
+    if (!session) return undefined;
+    const socket = io({ auth: { token: session.token } });
+    socket.on('chat:added', chat => {
+      if (!chat?.id) return;
+      setChats(current => [chat, ...current.filter(item => item.id !== chat.id)]);
+      setSelectedId(current => current ?? chat.id);
+    });
+    socket.on('connect_error', err => {
+      if (err.message === 'authentication required') {
+        endSession('Session expired. Log in again.');
+      }
+    });
+    return () => socket.disconnect();
   }, [session, endSession]);
 
   async function handleCreateChat(event) {

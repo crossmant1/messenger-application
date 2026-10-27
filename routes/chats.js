@@ -3,7 +3,7 @@ import Chat from '../models/Chat.js';
 import Message from '../models/Message.js';
 import { PrimerUser } from '../models/PrimerUser.js';
 import { normalizedUsername } from '../auth/input.js';
-import { chatRoom } from '../realtime/chatSockets.js';
+import { chatRoom, userRoom } from '../realtime/chatSockets.js';
 
 export const chatsRouter = Router();
 const idPattern = /^[0-9a-f]{24}$/i;
@@ -60,11 +60,16 @@ chatsRouter.post('/:chatId/participants', async (req, res, next) => {
     if (added._id.toString() === req.auth.userId) {
       return res.status(400).json({ error: 'already a chat member' });
     }
-    if (!chat.participants.some(id => id.toString() === added._id.toString())) {
+    const wasAdded = !chat.participants.some(id => id.toString() === added._id.toString());
+    if (wasAdded) {
       chat.participants.push(added._id);
       await chat.save();
     }
     await chat.populate('participants', 'username');
+    if (wasAdded) {
+      const addedChat = viewChat(chat, added._id.toString());
+      req.app.get('chatIo').to(userRoom(added._id.toString())).emit('chat:added', addedChat);
+    }
     return res.status(200).json({ chat: viewChat(chat, req.auth.userId) });
   } catch (err) {
     next(err);
