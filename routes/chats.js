@@ -35,6 +35,14 @@ async function memberChat(chatId, userId) {
   return Chat.findOne({ _id: chatId, participants: userId }).select('_id').lean();
 }
 
+async function promoteToGroup(chat) {
+  if (chat.isGroupChat) return;
+  chat.chatID = `group:${chat._id}`;
+  chat.chatName = 'Group Chat';
+  chat.isGroupChat = true;
+  await chat.save();
+}
+
 chatsRouter.get('/', async (req, res, next) => {
   try {
     const chats = await Chat.find({ participants: req.auth.userId })
@@ -63,6 +71,11 @@ chatsRouter.post('/:chatId/participants', async (req, res, next) => {
     const wasAdded = !chat.participants.some(id => id.toString() === added._id.toString());
     if (wasAdded) {
       chat.participants.push(added._id);
+      if (chat.participants.length > 2) {
+        chat.chatID = `group:${chat._id}`;
+        chat.chatName = 'Group Chat';
+        chat.isGroupChat = true;
+      }
       await chat.save();
     }
     await chat.populate('participants', 'username');
@@ -91,6 +104,10 @@ chatsRouter.post('/', async (req, res, next) => {
     const participantIds = [req.auth.userId, other._id.toString()].sort();
     const chatID = `direct:${participantIds.join(':')}`;
     let chat = await Chat.findOne({ chatID });
+    if (chat && chat.participants.length > 2) {
+      await promoteToGroup(chat);
+      chat = null;
+    }
     if (!chat) {
       try {
         chat = await Chat.create({

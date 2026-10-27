@@ -10,7 +10,7 @@ function mergeMessages(current, incoming) {
       || left.id.localeCompare(right.id));
 }
 
-export default function ChatPanel({ chat, token, userId, onUnauthorized, onChatUpdated }) {
+export default function ChatPanel({ chat, token, userId, username, onUnauthorized, onChatUpdated }) {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(true);
@@ -155,12 +155,19 @@ export default function ChatPanel({ chat, token, userId, onUnauthorized, onChatU
       {loading ? <p role="status">Loading messages...</p> : (
         messages.length === 0 ? <p className="empty-chat">No messages yet. Say hello!</p> :
           <ol ref={messagesListRef} className="messages" aria-live="polite">
-            {messages.map(message => (
-              <li key={message.id} className={message.senderId === userId ? 'message mine' : 'message'}>
-                <p>{message.body}</p>
-                <time dateTime={message.createdAt}>{new Date(message.createdAt).toLocaleString()}</time>
-              </li>
-            ))}
+            {messages.map(message => {
+              const sender = message.senderId === userId
+                ? username
+                : chat.participants?.find(person => person.id === message.senderId)?.username
+                  ?? 'Unknown user';
+              return (
+                <li key={message.id} className={message.senderId === userId ? 'message mine' : 'message'}>
+                  <p className="message-sender">{sender}</p>
+                  <p>{message.body}</p>
+                  <time dateTime={message.createdAt}>{new Date(message.createdAt).toLocaleString()}</time>
+                </li>
+              );
+            })}
           </ol>
       )}
       {error && <p role="alert">{error}</p>}
