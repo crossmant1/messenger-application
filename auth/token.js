@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken';
 
 const secret = process.env.JWT_SECRET;
-console.log(secret);
 
 if (typeof secret !== 'string'
     || /^[0-9a-f]{64}$/i.test(secret) === false) {
